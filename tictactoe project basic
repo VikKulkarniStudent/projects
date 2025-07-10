@@ -1,63 +1,120 @@
 #include <iostream>
-#include <string> 
-#include <sstream>
-#include "ttt_functions.hpp"
+#include <tuple>
+using namespace std;
 
-void view(std::string array[3][3]) {
-    for(int i = 0; i < 3; ++i)  
-    {   
-        std::cout<< "\n  ";
-        for(int j = 0; j < 3; ++j)  
-        {  
-            std::cout << array[i][j];
-            if (j < 2 ) {
-                std::cout << " | " ;
-            }
-        }  
-        if (i < 2) {
-            std::cout<<"\n ----------- "; 
-        } else {
-            std::cout<<"\n ";
-        }
-    }  
+bool gameOver;
+char board[3][3];
+char player;
+
+void init() {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) board[i][j] = '_';
+    }
+
+    gameOver = false;
+    player = 'X';
 }
 
-void fill(std::string symbol, int line_index, int column_index) {
-    if ((symbol == "x" || symbol == "o") && (line_index == 1 || line_index == 2 || line_index == 3) && (column_index == 1 || column_index == 2 || column_index == 3) ) {
-        array[line_index-1][column_index-1] = symbol;
-    } else {
-        std::cout << "Wrong input. Please, try again with appropriate value. \n ";
+void draw_board(){
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (i == 2) cout << ' ';
+            else cout << '_';
+            if (board[i][j] != '_') cout << board[i][j];
+            else cout << ' ';
+            if (i == 2) cout << ' ';
+            else cout << '_';
+            if (j != 2) cout << '|';
+        }
+        cout << '\n';
     }
 }
 
-void check_win() {
-    for (int i = 0; i < 3; i++){
-        if (array[i][0] != " " && array[i][0] == array[i][1] && array[i][0] == array[i][2]) {
-            winner_symbol = array[i][0];
-            break;
+bool check_tie() {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (board[i][j] == '_') return false;
         }
-    };
-    for (int j = 0; j < 3; j++) {
-        if (array[0][j] != " " && array[0][j] == array[1][j] && array[0][j] == array[2][j]) {
-            winner_symbol = array[0][j];
-            break;
-        }
-    };
-    if (array[0][0] != " " && array[0][0] == array[1][1] && array[0][0] == array[2][2]) {
-        winner_symbol = array[0][0];
-    };    
-    if (array[0][2] != " " && array[0][2] == array[1][1] && array[0][2] == array[2][0]){
-        winner_symbol = array[0][2];
-    };  
+    }
+
+    return true;
 }
 
+bool check_winner(int row, int col, char player) {
+    if (board[row][0] == board[row][1] && board[row][1] == board[row][2]) {
+        cout << player << " wins!";
+        return true;
+    }
 
-void play_one_round(){    
-    std::cout << "What do you want to play next ? \n";
-    std::cin >> symbol;
-    std::cin >> line;
-    std::cin >> col;
+    if (board[0][col] == board[1][col] && board[1][col] == board[2][col]) {
+        cout << player << " wins!";
+        return true;
+    }
 
-    fill(symbol, line, col);
-    view(array);
+    if (board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[0][0] == player) {
+        cout << player << " wins";
+        return true;
+    }
+
+    if (board[2][0] == board[1][1] && board[1][1] == board[0][2] && board[1][1] == player) {
+        cout << player << " wins";
+        return true;
+    }
+
+    return false;
+}
+
+tuple <int, int> input() {
+    int row, col;
+    cout << "Enter the number of the row: ";
+    while (!(cin >> row) || row > 3 || row < 1) {
+        cin.clear();
+        cin.ignore(256, '\n');
+        cout << "\nInvalid play; Try again;\nEnter the number of the row: ";
+    }
+
+    cout << "\nEnter the number of the collumn: ";
+    while (!(cin >> col) || col > 3 || col < 1) {
+        cin.clear();
+        cin.ignore(256, '\n');
+        cout << "Invalid play; Try again;\nEnter the number of the collumn: ";
+    }
+    return {row, col};
+}
+
+void play() {
+    while (!gameOver) {
+        auto [row, col] = input();
+        while (board[row-1][col-1] != '_') {
+            cout << "\nInvalid play; Try again.\n";
+            auto [r, c] = input();
+            row = r;
+            col = c;
+        }
+
+        board[row-1][col-1] = player;
+        draw_board();
+
+        if (check_winner(row-1, col-1, player)) {
+            gameOver = true;
+        }
+
+        else if (check_tie()) {
+            gameOver = true;
+            cout << "It was a tie!";
+        }
+
+        else {
+            if (player == 'X') player = 'O';
+            else player = 'X';
+        }
+    }
+}
+
+int main() {
+    init();
+    draw_board();
+    play();
+
+    return 0;
 }
